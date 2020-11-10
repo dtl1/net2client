@@ -4,13 +4,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.sql.Time;
 
-
 public class DMBServer {
-
 
     static Configuration c_;
     static int port; //server port
-
+    static String boardDirectory;
 
     public static void main(String[] args) {
 
@@ -18,56 +16,44 @@ public class DMBServer {
 
         try {
             port = c_.serverPort;
+            boardDirectory = c_.boardDirectory;
         } catch (NumberFormatException e) {
             System.out.println("can't configure port: " + e.getMessage());
+            System.exit(0);
         }
-
-
-        //variables to hold the response message and the received message, and a boolean one that tells the while loop
-        //if the program is finished
-        boolean finished = false;
-
 
         try {
             //creating a socket
-            ServerSocket serverSocket = new ServerSocket(Integer.parseInt(args[0]));
+            ServerSocket serverSocket = new ServerSocket(port);
+            System.out.println("\n++ Socket created at port: " + port);
 
-            System.out.println("\nSocket created at port: " + port + ", waiting for client");
-
+            boolean finished = false;
             while (!finished) {
 
+                //receive connection from client
+                System.out.println("\n++ Waiting for client connection");
                 Socket socket = serverSocket.accept();
+                System.out.println("\n++ Connection made");
 
-                System.out.println("\nConnection made");
-
-                //creating an input and a reader
+                //receive clients input
                 InputStream input = socket.getInputStream();
 
-                //creating an output and writer
-                //OutputStream output = socket.getOutputStream();
-                //PrintWriter writer = new PrintWriter(output, true);
+                //convert client's input to string
+                String inputStr = new String(input.readAllBytes(), StandardCharsets.UTF_8);
+                inputStr = inputStr.substring(2);
+                System.out.println("\n++ Received data from client: " + inputStr +"\n");
 
-                //receive the clients input
-                String s = new String(input.readAllBytes(), StandardCharsets.UTF_8);
-
-
-
-                System.out.println("\nReceived data from client: " + s);
-
-                String[] ee = new String[3];
-
+                //array of details to be sent to dirandfile program
+                String[] details = new String[3];
                 TimeStamp timeStamp = new TimeStamp();
-                ee[0] = timeStamp.getDate();
-                ee[1] = ee[0].substring(0,10);
-                ee[2] = s;
+                details[0] = timeStamp.getDate();
+                details[1] = boardDirectory + details[0].substring(0,10);
+                details[2] = inputStr;
+                DirAndFile.main(details);
 
-
-
-
-                DirAndFile.main(ee);
-
+                //close the connection
                 socket.close();
-                System.out.println("\nConnection closed");
+                System.out.println("\n++ Connection closed");
             }
 
 
