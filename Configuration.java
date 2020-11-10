@@ -19,6 +19,7 @@ public class Configuration
   public String        propertiesFile_ = "cs2003-net2.properties";
 
   // These default values must be overridden in the properties file.
+  public String     defaultUser="To be configured";
   public String     serverAddress="To be configured"; // server FQDN
   public int        serverPort=-1; // default server port
   public String     boardDirectory="To be configured";
@@ -37,6 +38,11 @@ public class Configuration
       if (p != null) {
         properties_.load(p);
         String s;
+
+        if ((s = properties_.getProperty("defaultUser")) != null) {
+          System.out.println(propertiesFile_ + " defaultUser: " + defaultUser + " -> " + s);
+          defaultUser = new String(s);
+        }
 
         if ((s = properties_.getProperty("serverAddress")) != null) {
           System.out.println(propertiesFile_ + " serverAddress: " + serverAddress + " -> " + s);

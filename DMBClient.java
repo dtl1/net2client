@@ -17,11 +17,15 @@ public class DMBClient {
     static String server; // FQDN
     static int port; //server port
 
+
     public static void main(String[] args) {
+
+        //timestamp object
+        TimeStamp timeStamp = new TimeStamp();
 
         c_ = new Configuration("cs2003-net2.properties");
         try {
-            server = c_.serverAddress;
+            server = c_.defaultUser + c_.serverAddress;
             port = c_.serverPort;
         } catch (NumberFormatException e) {
             System.out.println("can't configure port: " + e.getMessage());
@@ -43,26 +47,52 @@ public class DMBClient {
 
             String[] inputArray = userInput.split(" ");
 
-            if(inputArray.length < 3 || !(inputArray[0].equals("::to")) ){
-                System.out.println("\nInvalid input syntax\nCorrect syntax: \"::to <user> <message>\"");
-            } else if(!(userPorts.containsKey(inputArray[1]))){
-                System.out.println("No user exists with this username");
-            } else{
-                validInput = true;
+            if(inputArray[0].equals("::fetch")){
+                if(inputArray.length == 2){
 
-                user = inputArray[1];
+                    validInput = true;
+                    message = inputArray[1];
 
-                for(int i = 2; i < inputArray.length; i ++ ){
-                    message += inputArray[i] + " ";
+                } else if(inputArray.length == 1){
+
+                    validInput = true;
+                    message = timeStamp.getDate();
+                } else{
+                    System.out.println("\nInvalid input syntax\nCorrect syntax: \"::fetch <date>\"");
+                    System.out.println("Or use: \t\"::fetch\" \t to use today's date");
                 }
 
-                message = message.substring(0, message.length() -1);
+
+            } else if(inputArray[0].equals("::to")){
+
+                if(inputArray.length < 3){
+                    System.out.println("\nInvalid input syntax\nCorrect syntax: \"::to <user> <message>\"");
+                } else if(!(userPorts.containsKey(inputArray[1]))){
+                    System.out.println("No user exists with this username");
+                } else{
+                    validInput = true;
+
+                    user = inputArray[1];
+
+                    for(int i = 2; i < inputArray.length; i ++ ){
+                        message += inputArray[i] + " ";
+                    }
+
+                    message = message.substring(0, message.length() -1);
+
+                    server = user + c_.serverAddress;
+                    port = userPorts.get(user);
+                }
+
+
+
+            } else{
+                System.out.println("\n Error, unrecognised command");
             }
 
         }
 
-        server = user + server;
-        port = userPorts.get(user);
+
 
         try {
             Socket connection;
@@ -85,7 +115,6 @@ public class DMBClient {
 
             tx = connection.getOutputStream();
             rx = connection.getInputStream();
-            TimeStamp timeStamp = new TimeStamp();
 
             buffer = ("::from " + timeStamp.getUser() +" " +message).getBytes();
             r = buffer.length;
